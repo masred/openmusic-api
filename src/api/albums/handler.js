@@ -4,7 +4,6 @@ module.exports = class AlbumsHandler {
     this.validator = validator;
 
     this.postAlbumHandler = this.postAlbumHandler.bind(this);
-    this.getAlbumsHandler = this.getAlbumsHandler.bind(this);
     this.getAlbumByIdHandler = this.getAlbumByIdHandler.bind(this);
     this.putAlbumByIdHandler = this.putAlbumByIdHandler.bind(this);
     this.deleteAlbumByIdHandler = this.deleteAlbumByIdHandler.bind(this);
@@ -26,16 +25,6 @@ module.exports = class AlbumsHandler {
 
     response.code(201);
     return response;
-  }
-
-  async getAlbumsHandler() {
-    const albums = await this.service.getAlbums();
-    return {
-      status: 'success',
-      data: {
-        albums,
-      },
-    };
   }
 
   async getAlbumByIdHandler(request) {

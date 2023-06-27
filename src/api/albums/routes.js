@@ -6,11 +6,6 @@ module.exports = (handler) => [
   },
   {
     method: 'GET',
-    path: '/albums',
-    handler: handler.getAlbumsHandler,
-  },
-  {
-    method: 'GET',
     path: '/albums/{id}',
     handler: handler.getAlbumByIdHandler,
   },
