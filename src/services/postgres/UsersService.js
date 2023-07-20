@@ -2,6 +2,7 @@
 const bcrypt = require('bcrypt');
 const { nanoid } = require('nanoid');
 const { Pool } = require('pg');
+const AuthenticationError = require('../../exceptions/AuthenticationError');
 const InvariantError = require('../../exceptions/InvariantError');
 
 module.exports = class UsersService {
@@ -42,5 +43,26 @@ module.exports = class UsersService {
     if (rowCount) {
       throw new InvariantError('Username already in use');
     }
+  }
+
+  async verifyCredential({ username, password }) {
+    const query = {
+      text: 'SELECT * FROM users WHERE username = $1',
+      values: [username],
+    };
+    const { rows } = await this.pool.query(query);
+
+    if (!rows.length) {
+      throw new AuthenticationError('Wrong username or password');
+    }
+
+    const { id, password: hashedPassword } = rows[0];
+    const isPasswordMatch = await bcrypt.compare(password, hashedPassword);
+
+    if (!isPasswordMatch) {
+      throw new AuthenticationError('Wrong username or password');
+    }
+
+    return id;
   }
 };
