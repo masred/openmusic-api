@@ -26,6 +26,10 @@ const PlaylistsService = require('./services/postgres/PlaylistsService');
 const PlaylistSongsService = require('./services/postgres/PlaylistSongsService');
 const PlaylistsValidator = require('./validator/playlists');
 
+const exportsPlugin = require('./api/exports');
+const producerService = require('./services/rabbitmq/ProducerService');
+const ExportsValidator = require('./validator/exports');
+
 const init = async () => {
   const albumsService = new AlbumsService();
   const songsService = new SongsService();
@@ -50,7 +54,7 @@ const init = async () => {
     },
   ]);
 
-  server.auth.strategy('playlist_auth', 'jwt', {
+  server.auth.strategy('auth', 'jwt', {
     keys: process.env.ACCESS_TOKEN_KEY,
     verify: {
       aud: false,
@@ -103,6 +107,14 @@ const init = async () => {
         playlistsService,
         playlistSongsService,
         validator: PlaylistsValidator,
+      },
+    },
+    {
+      plugin: exportsPlugin,
+      options: {
+        producerService,
+        playlistsService,
+        validator: ExportsValidator,
       },
     },
   ]);
