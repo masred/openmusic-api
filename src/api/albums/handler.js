@@ -1,12 +1,8 @@
 module.exports = class AlbumsHandler {
-  constructor(service, validator) {
+  constructor(service, validator, storageService) {
     this.service = service;
     this.validator = validator;
-
-    this.postAlbumHandler = this.postAlbumHandler.bind(this);
-    this.getAlbumByIdHandler = this.getAlbumByIdHandler.bind(this);
-    this.putAlbumByIdHandler = this.putAlbumByIdHandler.bind(this);
-    this.deleteAlbumByIdHandler = this.deleteAlbumByIdHandler.bind(this);
+    this.storageService = storageService;
   }
 
   async postAlbumHandler(request, h) {
@@ -57,5 +53,26 @@ module.exports = class AlbumsHandler {
       status: 'success',
       message: 'Album successfully deleted',
     };
+  }
+
+  async postAlbumCoverHandler(req, h) {
+    const baseUrl = `http://${process.env.HOST}:${process.env.PORT}/albums`;
+
+    const { id } = req.params;
+    const { cover } = req.payload;
+
+    this.validator.AlbumsValidator.validatePostAlbumCoverHeader(cover.hapi.headers);
+
+    const fileName = await this.storageService.writeFile(cover, id, 'cover');
+
+    await this.service.addCoverUrlOnAlbum(id, `${baseUrl}/covers/${fileName}`);
+
+    const response = h.response({
+      status: 'success',
+      message: 'Cover uploaded.',
+    });
+    response.code(201);
+
+    return response;
   }
 };

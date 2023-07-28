@@ -23,7 +23,7 @@ class ExportsHandler {
 
     const response = h.response({
       status: 'success',
-      message: `Playlist has been sent to ${targetEmail}`,
+      message: 'We are processing your request',
     });
     response.code(201);
 
