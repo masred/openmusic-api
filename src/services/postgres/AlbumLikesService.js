@@ -3,9 +3,12 @@ const { Pool } = require('pg');
 const InvariantError = require('../../exceptions/InvariantError');
 
 class AlbumLikesService {
-  constructor() {
+  constructor(cacheService) {
     this.pool = new Pool();
+    this.cacheService = cacheService;
   }
+
+  albumLikesCacheKey = 'album-likes:';
 
   async likeAnAlbum(albumId, userId) {
     const id = `like-${nanoid(16)}`;
@@ -19,6 +22,8 @@ class AlbumLikesService {
     if (!rowCount) {
       throw new InvariantError('Fail to like an album');
     }
+
+    await this.cacheService.del(`${this.albumLikesCacheKey}${albumId}`);
   }
 
   async dislikeAnAlbum(albumId, userId) {
@@ -31,6 +36,8 @@ class AlbumLikesService {
     if (!rowCount) {
       throw new InvariantError('Fail to dislike an album');
     }
+
+    await this.cacheService.del(`${this.albumLikesCacheKey}${albumId}`);
   }
 
   async isAlbumLiked(albumId, userId) {
@@ -53,8 +60,14 @@ class AlbumLikesService {
       values: [albumId],
     };
     const { rowCount } = await this.pool.query(query);
+    await this.cacheService.set(`${this.albumLikesCacheKey}${albumId}`, rowCount, 1800);
 
     return rowCount;
+  }
+
+  async cachedAlbumLikesCount(albumId) {
+    const cache = await this.cacheService.get(`${this.albumLikesCacheKey}${albumId}`);
+    return cache;
   }
 }
 

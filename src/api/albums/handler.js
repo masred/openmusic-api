@@ -1,15 +1,12 @@
 const config = require('../../utils/config');
 
 module.exports = class AlbumsHandler {
-  constructor(service, validator, storageService, albumLikesService, cacheService) {
+  constructor(service, validator, storageService, albumLikesService) {
     this.service = service;
     this.validator = validator;
     this.storageService = storageService;
     this.albumLikesService = albumLikesService;
-    this.cacheService = cacheService;
   }
-
-  albumLikesCacheKey = 'album-likes:';
 
   async postAlbumHandler(request, h) {
     this.validator.AlbumsValidator.validateAlbumPayload(request.payload);
@@ -102,8 +99,6 @@ module.exports = class AlbumsHandler {
 
     await this.albumLikesService.likeAnAlbum(id, authId);
 
-    await this.cacheService.del(`${this.albumLikesCacheKey}${id}`);
-
     const response = h.response({
       status: 'success',
       message: 'Album liked',
@@ -115,10 +110,9 @@ module.exports = class AlbumsHandler {
 
   async getAlbumLikesHandler(req, h) {
     const { id } = req.params;
+    const cache = await this.albumLikesService.cachedAlbumLikesCount(id);
 
-    const cache = await this.cacheService.get(`${this.albumLikesCacheKey}${id}`);
-
-    if (cache !== null) {
+    if (cache) {
       const response = h.response({
         status: 'success',
         data: { likes: +cache },
@@ -129,8 +123,6 @@ module.exports = class AlbumsHandler {
     }
 
     const likes = await this.albumLikesService.albumLikesCount(id);
-
-    await this.cacheService.set(`${this.albumLikesCacheKey}${id}`, likes, 1800);
 
     return {
       status: 'success',
@@ -157,8 +149,6 @@ module.exports = class AlbumsHandler {
     }
 
     await this.albumLikesService.dislikeAnAlbum(id, authId);
-
-    await this.cacheService.del(`${this.albumLikesCacheKey}${id}`);
 
     return h.response({
       status: 'success',

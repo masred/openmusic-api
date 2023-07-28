@@ -9,14 +9,12 @@ module.exports = {
     validator,
     storageService,
     albumLikesService,
-    cacheService,
   }) => {
     const albumsHandler = new AlbumsHandler(
       service,
       validator,
       storageService,
       albumLikesService,
-      cacheService,
     );
     server.route(routes(albumsHandler));
   },

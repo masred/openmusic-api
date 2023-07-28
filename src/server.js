@@ -46,7 +46,7 @@ const init = async () => {
   const playlistsService = new PlaylistsService();
   const playlistSongsService = new PlaylistSongsService(songsService);
   const storageAlbumsService = new StorageService(path.resolve(__dirname, 'api/albums/storage/covers'));
-  const albumLikesService = new AlbumLikesService();
+  const albumLikesService = new AlbumLikesService(cacheService);
 
   const server = Hapi.server({
     port: config.app.port,
@@ -87,7 +87,6 @@ const init = async () => {
         validator: AlbumsValidator,
         storageService: storageAlbumsService,
         albumLikesService,
-        cacheService,
       },
     },
     {
