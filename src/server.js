@@ -35,6 +35,7 @@ const PlaylistsValidator = require('./validator/playlists');
 const exportsPlugin = require('./api/exports');
 const producerService = require('./services/rabbitmq/ProducerService');
 const ExportsValidator = require('./validator/exports');
+const config = require('./utils/config');
 
 const init = async () => {
   const cacheService = new CacheService();
@@ -48,8 +49,8 @@ const init = async () => {
   const albumLikesService = new AlbumLikesService();
 
   const server = Hapi.server({
-    port: process.env.PORT,
-    host: process.env.HOST,
+    port: config.app.port,
+    host: config.app.host,
     routes: {
       cors: {
         origin: ['*'],
@@ -63,12 +64,12 @@ const init = async () => {
   ]);
 
   server.auth.strategy('auth', 'jwt', {
-    keys: process.env.ACCESS_TOKEN_KEY,
+    keys: config.jwt.accessTokenKey,
     verify: {
       aud: false,
       iss: false,
       sub: false,
-      maxAgeSec: process.env.ACCESS_TOKEN_AGE,
+      maxAgeSec: config.jwt.accessTokenAge,
     },
     validate: (artifacts) => ({
       isValid: true,

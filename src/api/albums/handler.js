@@ -1,3 +1,5 @@
+const config = require('../../utils/config');
+
 module.exports = class AlbumsHandler {
   constructor(service, validator, storageService, albumLikesService, cacheService) {
     this.service = service;
@@ -60,7 +62,7 @@ module.exports = class AlbumsHandler {
   }
 
   async postAlbumCoverHandler(req, h) {
-    const baseUrl = `http://${process.env.HOST}:${process.env.PORT}/albums`;
+    const baseUrl = `http://${config.app.host}:${config.app.port}/albums`;
 
     const { id } = req.params;
     const { cover } = req.payload;
