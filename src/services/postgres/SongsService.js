@@ -42,7 +42,7 @@ class SongsService {
 
     const result = await this.pool.query(query);
 
-    return result.rows.map(bindSongToModel);
+    return result.rows;
   }
 
   async getSongById(id) {
