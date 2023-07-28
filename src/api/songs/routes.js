@@ -2,26 +2,26 @@ module.exports = (handler) => [
   {
     method: 'POST',
     path: '/songs',
-    handler: handler.postSongHandler,
+    handler: (req, h) => handler.postSongHandler(req, h),
   },
   {
     method: 'GET',
     path: '/songs',
-    handler: handler.getSongsHandler,
+    handler: (req) => handler.getSongsHandler(req),
   },
   {
     method: 'GET',
     path: '/songs/{id}',
-    handler: handler.getSongByIdHandler,
+    handler: (req) => handler.getSongByIdHandler(req),
   },
   {
     method: 'PUT',
     path: '/songs/{id}',
-    handler: handler.putSongByIdHandler,
+    handler: (req) => handler.putSongByIdHandler(req),
   },
   {
     method: 'DELETE',
     path: '/songs/{id}',
-    handler: handler.deleteSongByIdHandler,
+    handler: (req) => handler.deleteSongByIdHandler(req),
   },
 ];
