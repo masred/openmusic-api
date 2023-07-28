@@ -45,7 +45,7 @@ const init = async () => {
   const authenticationsService = new AuthenticationsService();
   const playlistsService = new PlaylistsService();
   const playlistSongsService = new PlaylistSongsService(songsService);
-  const storageAlbumsService = new StorageService(path.resolve(__dirname, 'storage'));
+  const storageAlbumsService = new StorageService(path.resolve(__dirname, 'api/albums/storage/covers'));
   const albumLikesService = new AlbumLikesService();
 
   const server = Hapi.server({
