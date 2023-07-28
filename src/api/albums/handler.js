@@ -1,9 +1,13 @@
 module.exports = class AlbumsHandler {
-  constructor(service, validator, storageService) {
+  constructor(service, validator, storageService, albumLikesService, cacheService) {
     this.service = service;
     this.validator = validator;
     this.storageService = storageService;
+    this.albumLikesService = albumLikesService;
+    this.cacheService = cacheService;
   }
+
+  albumLikesCacheKey = 'album-likes:';
 
   async postAlbumHandler(request, h) {
     this.validator.AlbumsValidator.validateAlbumPayload(request.payload);
@@ -74,5 +78,89 @@ module.exports = class AlbumsHandler {
     response.code(201);
 
     return response;
+  }
+
+  async postAlbumLikeHandler(req, h) {
+    const { id } = req.params;
+    const { id: authId } = req.auth.credentials;
+
+    await this.service.getAlbumById(id);
+
+    const isAlbumLiked = await this.albumLikesService.isAlbumLiked(id, authId);
+
+    if (isAlbumLiked) {
+      const response = h.response({
+        status: 'fail',
+        message: 'Album already liked',
+      });
+      response.code(400);
+
+      return response;
+    }
+
+    await this.albumLikesService.likeAnAlbum(id, authId);
+
+    await this.cacheService.del(`${this.albumLikesCacheKey}${id}`);
+
+    const response = h.response({
+      status: 'success',
+      message: 'Album liked',
+    });
+    response.code(201);
+
+    return response;
+  }
+
+  async getAlbumLikesHandler(req, h) {
+    const { id } = req.params;
+
+    const cache = await this.cacheService.get(`${this.albumLikesCacheKey}${id}`);
+
+    if (cache !== null) {
+      const response = h.response({
+        status: 'success',
+        data: { likes: +cache },
+      });
+      response.header('X-Data-Source', 'cache');
+
+      return response;
+    }
+
+    const likes = await this.albumLikesService.albumLikesCount(id);
+
+    await this.cacheService.set(`${this.albumLikesCacheKey}${id}`, likes, 1800);
+
+    return {
+      status: 'success',
+      data: { likes },
+    };
+  }
+
+  async deleteAlbumLikeHandler(req, h) {
+    const { id } = req.params;
+    const { id: authId } = req.auth.credentials;
+
+    await this.service.getAlbumById(id);
+
+    const isAlbumLiked = await this.albumLikesService.isAlbumLiked(id, authId);
+
+    if (!isAlbumLiked) {
+      const response = h.response({
+        status: 'fail',
+        message: 'You have not liked this album',
+      });
+      response.code(400);
+
+      return response;
+    }
+
+    await this.albumLikesService.dislikeAnAlbum(id, authId);
+
+    await this.cacheService.del(`${this.albumLikesCacheKey}${id}`);
+
+    return h.response({
+      status: 'success',
+      message: 'Album disliked',
+    });
   }
 };

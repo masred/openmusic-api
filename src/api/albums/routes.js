@@ -1,3 +1,5 @@
+const path = require('path');
+
 module.exports = (handler) => [
   {
     method: 'POST',
@@ -31,5 +33,31 @@ module.exports = (handler) => [
         maxBytes: 512000,
       },
     },
+  },
+  {
+    method: 'GET',
+    path: '/albums/{param*}',
+    handler: {
+      directory: {
+        path: path.resolve(__dirname, 'storage'),
+      },
+    },
+  },
+  {
+    method: 'POST',
+    path: '/albums/{id}/likes',
+    handler: (req, h) => handler.postAlbumLikeHandler(req, h),
+    options: { auth: 'auth' },
+  },
+  {
+    method: 'GET',
+    path: '/albums/{id}/likes',
+    handler: (req, h) => handler.getAlbumLikesHandler(req, h),
+  },
+  {
+    method: 'DELETE',
+    path: '/albums/{id}/likes',
+    handler: (req, h) => handler.deleteAlbumLikeHandler(req, h),
+    options: { auth: 'auth' },
   },
 ];

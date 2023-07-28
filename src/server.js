@@ -1,14 +1,18 @@
+/* eslint-disable import/no-extraneous-dependencies */
 require('dotenv').config();
 
 const path = require('path');
 const Hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
+const inert = require('@hapi/inert');
 const ClientError = require('./exceptions/ClientError');
 const StorageService = require('./services/storage/StorageService');
+const CacheService = require('./services/redis/CacheService');
 
 const albums = require('./api/albums');
 const AlbumsService = require('./services/postgres/AlbumsService');
 const AlbumsValidator = require('./validator/albums');
+const AlbumLikesService = require('./services/postgres/AlbumLikesService');
 
 const songs = require('./api/songs');
 const SongsService = require('./services/postgres/SongsService');
@@ -33,6 +37,7 @@ const producerService = require('./services/rabbitmq/ProducerService');
 const ExportsValidator = require('./validator/exports');
 
 const init = async () => {
+  const cacheService = new CacheService();
   const albumsService = new AlbumsService();
   const songsService = new SongsService();
   const usersService = new UsersService();
@@ -40,6 +45,7 @@ const init = async () => {
   const playlistsService = new PlaylistsService();
   const playlistSongsService = new PlaylistSongsService(songsService);
   const storageAlbumsService = new StorageService(path.resolve(__dirname, 'storage'));
+  const albumLikesService = new AlbumLikesService();
 
   const server = Hapi.server({
     port: process.env.PORT,
@@ -52,9 +58,8 @@ const init = async () => {
   });
 
   await server.register([
-    {
-      plugin: Jwt,
-    },
+    { plugin: Jwt },
+    { plugin: inert },
   ]);
 
   server.auth.strategy('auth', 'jwt', {
@@ -80,6 +85,8 @@ const init = async () => {
         service: albumsService,
         validator: AlbumsValidator,
         storageService: storageAlbumsService,
+        albumLikesService,
+        cacheService,
       },
     },
     {
